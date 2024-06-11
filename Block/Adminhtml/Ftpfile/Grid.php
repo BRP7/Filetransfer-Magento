@@ -32,8 +32,16 @@ class Ccc_Filetransfer_Block_Adminhtml_Ftpfile_Grid extends Mage_Adminhtml_Block
             'column_css_class' => 'row_name',
         )
         );
+        $this->addColumn('file_date', array(
+            'header' => Mage::helper('ccc_filetransfer')->__('File Date'),
+            'align' => 'left',
+            'index' => 'file_date',
+            'type' => 'text',
+            'column_css_class' => 'row_name',
+        )
+        );
         $this->addColumn('configuration_id', array(
-            'header' => Mage::helper('ccc_filetransfer')->__('Host'),
+            'header' => Mage::helper('ccc_filetransfer')->__('Configuration Id'),
             'align' => 'left',
             'index' => 'configuration_id',
             'type' => 'text',
@@ -43,10 +51,6 @@ class Ccc_Filetransfer_Block_Adminhtml_Ftpfile_Grid extends Mage_Adminhtml_Block
         return parent::_prepareColumns();
     }
 
-    public function getRowUrl($row)
-    {
-        return $this->getUrl('*/*/edit', array('id' => $row->getId()));
-    }
     
     protected function _prepareMassaction()
     {
@@ -62,7 +66,6 @@ class Ccc_Filetransfer_Block_Adminhtml_Ftpfile_Grid extends Mage_Adminhtml_Block
             )
         );
 
-       
 
         Mage::dispatchEvent('filetransfer_adminhtml_configuration_grid_prepare_massaction', array('block' => $this));
         return $this;
