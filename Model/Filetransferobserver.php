@@ -1,42 +1,60 @@
 <?php
 
-class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp{
+class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp
+{
     protected $_configData;
-    
-    
+
+
     public function setConfigData($config)
     {
         $this->_configData = $config;
         return $this;
     }
 
-    public function setConnection($conn){
-        $this->_conn=$conn;
+    public function setConnection($conn)
+    {
+        $this->_conn = $conn;
         return $this;
+    }
+    protected function isDirectory($filepath)
+    {
+        $listing = ftp_mlsd($this->_conn, $filepath);
+        var_dump($listing);
+        if ($listing === false || count($listing) === 0) {
+            return false;
+        }
+        $firstItem = $listing[0];
+        return $firstItem['type'] === 'dir';
+    }
+    public function readAndSave($filepath)
+    {
+        if ($this->isDirectory($filepath)) {
+            $this->recursiveReadAndSaveDirectory($filepath);
+        } else {
+            $this->saveAndDownloadFiles($filepath);
+        }
     }
 
     public function saveAndDownloadFiles($file)
     {
         $filepath = $file['text'];
-       
-        // die;
         $filename = $this->getProperFileName($filepath);
-        $localFilePath = Mage::getBaseDir('var') . DS . 'filetransfer' . DS . $this->_configData->getId().DS. $filename;
-        
+        $localFilePath = Mage::getBaseDir('var') . DS . 'filetransfer' . DS . $this->_configData->getId() . DS . $filename;
+
         $directory = dirname($localFilePath);
-    
+
         if (!is_dir($directory)) {
             echo "Directory does not exist: " . $directory;
-            mkdir($directory, 0777, true); 
+            mkdir($directory, 0777, true);
         } elseif (!is_writable($directory)) {
             echo "Directory is not writable: " . $directory;
-            chmod($directory, 0777); 
+            chmod($directory, 0777);
         } else {
             echo "Directory exists and is writable: " . $directory;
         }
-    
+
         echo "Trying to create file at: " . $localFilePath . "\n";
-    
+
         $newFile = fopen($localFilePath, 'w');
         var_dump($newFile);
         if ($newFile !== false) {
@@ -45,7 +63,7 @@ class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp{
             echo "Unable to create file: " . $localFilePath;
             throw new Exception('Failed to save attachment: ' . $localFilePath);
         }
-    
+
         $fileContents = $this->read($filepath);
         if ($fileContents !== false) {
             file_put_contents($localFilePath, $fileContents);
@@ -94,12 +112,13 @@ class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp{
 
 
 
-    public function moveFile($filepath) {
+    public function moveFile($filepath)
+    {
         $pathInfo = pathinfo($filepath);
         $filename = $pathInfo['basename'];
         var_dump($filename);
-        $destinationPath = 'downloadedfiles/'. $filename;
-        var_dump($destinationPath); 
+        $destinationPath = 'downloadedfiles/' . $filename;
+        var_dump($destinationPath);
 
         if (!is_dir('downloadedfiles')) {
             mkdir('downloadedfiles', 0777, true);
@@ -116,7 +135,7 @@ class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp{
             throw new Exception('Failed to move file: ' . $filepath);
         }
     }
-    
+
 
     public function saveFileToDb($filepath)
     {
@@ -127,7 +146,7 @@ class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp{
             ->setConfigurationId($configurationId)
             ->setFileDate($creationDate)
             ->save();
-            var_dump($fileData->getData());
+        var_dump($fileData->getData());
     }
 
     public function getProperFileName($filepath)
@@ -151,8 +170,23 @@ class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp{
             return null;
         } else {
             $creationDate = date('Y-m-d H:i:s', $lastModifiedTime);
-            $creationDate=str_replace(" ","_",$creationDate);
+            $creationDate = str_replace(" ", "_", $creationDate);
             return $creationDate;
+        }
+    }
+
+    protected function recursiveReadAndSaveDirectory($directory)
+    {
+        $contents = $this->ls($directory);
+
+        foreach ($contents as $item) {
+            $itemPath = $directory . DS . $item['text'];
+
+            if ($this->isDirectory($itemPath)) {
+                $this->recursiveReadAndSaveDirectory($itemPath);
+            } else {
+                $this->saveAndDownloadFiles($itemPath);
+            }
         }
     }
 
