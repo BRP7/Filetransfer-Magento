@@ -12,14 +12,11 @@ class Ccc_Filetransfer_Model_Fileconfiguration extends Varien_Io_Ftp
             'port' => $config->getPort(),
         );
         $this->open($ftpConfig);
-
         $files = $this->ls();
 
         foreach ($files as $file) {
             $pathInfo = pathinfo($file['text']);
             if ($pathInfo['basename']!="downloadedfiles"){
-                $fullPath = rtrim($config->getDirectory(), '/') . '/' . $file['text']; // Construct full file path
-                $config->saveFile($this->_conn, array('text' => $fullPath)); 
                 $config->saveFile($this->_conn, $file);
             }
         }

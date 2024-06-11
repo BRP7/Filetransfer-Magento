@@ -18,8 +18,11 @@ class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp
     }
     protected function isDirectory($filepath)
     {
-        $listing = ftp_mlsd($this->_conn, $filepath);
-        var_dump($listing);
+        // var_dump($filepath);
+        // $filepath = dirname($filepath);
+        // var_dump($filepath);
+        // die;
+        $listing = ftp_mlsd($this->_conn, $filepath['text']); 
         if ($listing === false || count($listing) === 0) {
             return false;
         }
@@ -31,6 +34,7 @@ class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp
         if ($this->isDirectory($filepath)) {
             $this->recursiveReadAndSaveDirectory($filepath);
         } else {
+            // echo $filepath;
             $this->saveAndDownloadFiles($filepath);
         }
     }
@@ -56,7 +60,7 @@ class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp
         echo "Trying to create file at: " . $localFilePath . "\n";
 
         $newFile = fopen($localFilePath, 'w');
-        var_dump($newFile);
+        // var_dump($newFile);
         if ($newFile !== false) {
             fclose($newFile);
         } else {
@@ -164,6 +168,7 @@ class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp
     protected function getFileCreationDate($filepath)
     {
         $lastModifiedTime = ftp_mdtm($this->_conn, $filepath);
+        var_dump($lastModifiedTime);
         // var_dump($lastModifiedTime);
         if ($lastModifiedTime === -1) {
             var_dump('can not get date');
