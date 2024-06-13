@@ -110,10 +110,17 @@ class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp
     public function getProperFileName($filepath)
     {
         $configurationId = $this->_configData->getId();
-        $creationDate = $this->getFileCreationDate($filepath);
-        $newDate = str_replace(" ", "_", $creationDate);
-        $fileNewPath = str_replace("./", '', $filepath);
-        $fileNewPath = $configurationId . '_' . $newDate . '_' . $fileNewPath;
+        // $creationDate = $this->getFileCreationDate($filepath);
+        if(!$this->isDirectory($filepath)){
+            $fileNewPath = str_replace("./", '', $filepath);
+            $creationDate=$this->getFileCreationDate($fileNewPath);
+            $newDate = str_replace(" ", "_", $creationDate);
+            $extension=explode('.',$filepath);
+            $filepath= str_replace('.'.$extension,'',$newDate);
+            $creationDate=$configurationId .$newDate.'.'.$extension;
+            var_dump($creationDate);
+            die;
+        }
         $filename = preg_replace('/[^\w\-\.]/', '_', $fileNewPath);
         return $filename;
     }
