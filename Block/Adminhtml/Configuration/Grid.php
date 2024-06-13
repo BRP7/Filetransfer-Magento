@@ -74,4 +74,5 @@ class Ccc_Filetransfer_Block_Adminhtml_Configuration_Grid extends Mage_Adminhtml
         Mage::dispatchEvent('filetransfer_adminhtml_configuration_grid_prepare_massaction', array('block' => $this));
         return $this;
     }
+
 }

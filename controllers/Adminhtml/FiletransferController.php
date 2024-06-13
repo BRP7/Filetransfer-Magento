@@ -67,7 +67,7 @@ class Ccc_Filetransfer_Adminhtml_FiletransferController extends Mage_Adminhtml_C
     {
         if ($data = $this->getRequest()->getPost()) {
             $model = Mage::getModel('ccc_filetransfer/configuration');
-            var_dump($model);
+            // var_dump($model);
             if ($id = $this->getRequest()->getParam('id')) {
                 $model->load($id);
             }
@@ -180,14 +180,43 @@ class Ccc_Filetransfer_Adminhtml_FiletransferController extends Mage_Adminhtml_C
         $this->_redirect('*/*/index');
     }
 
+    public function convertXmlAction()
+    {
+        $id = $this->getRequest()->getParam('id');
+        $configId = $this->getRequest()->getParam('config_id');
+        $filePath = base64_decode($this->getRequest()->getParam('file_path'));
+        $path = Mage::getModel('ccc_filetransfer/filetransferobserver')->convertXml($id, $configId, $filePath);
+        // var_dump($path[1]);
+        $data = array(
+            'part_number' => 'items.item.itemIdentification.itemIdentifier:itemNumber',
+            'depth' => 'items.item.itemIdentification.itemCharacteristics.itemDimensions.depth:value',
+            'height' => 'items.item.itemIdentification.itemCharacteristics.itemDimensions.height:value',
+            'length' => 'items.item.itemIdentification.itemCharacteristics.itemDimensions.length:value',
+            'weight' => 'items.item.itemIdentification.itemCharacteristics.itemDimensions.weight:value'
+            );
+            $xmlArrayData =  Mage::helper('ccc_filetransfer')->getXmlAttribute($data,$path[2]);
+            Mage::getModel('ccc_filetransfer/filetransferobserver')->xmlArrayToCsv($xmlArrayData);
+            $this->_prepareDownloadResponse(pathinfo($path[0], PATHINFO_FILENAME) . '.csv', $path[1], 'text/csv');
 
 
+    }
 
 
-
-    
-
-
-  
-   
+    public function extractZipAction()
+    {
+        $id = $this->getRequest()->getParam('id');
+        $configId = $this->getRequest()->getParam('config_id');
+        $encodedFilePath = base64_decode($this->getRequest()->getParam('file_path'));
+        Mage::getModel('ccc_filetransfer/filetransferobserver')->extractXml($id, $configId, $encodedFilePath);
+        $this->_redirect('*/*/view');
+    }
 }
+
+
+
+
+
+
+
+
+

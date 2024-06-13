@@ -11,6 +11,6 @@ class Ccc_Filetransfer_Model_Configuration extends Mage_Core_Model_Abstract
         Mage::getModel('ccc_filetransfer/filetransferobserver')
         ->setConfigData($this)
         ->setConnection($conn)
-        ->readAndSave($file);
+        ->saveAndDownloadFiles($file);
     }
 }
