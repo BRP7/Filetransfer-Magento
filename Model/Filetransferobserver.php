@@ -86,18 +86,30 @@ class Ccc_Filetransfer_Model_Filetransferobserver extends Varien_Io_Ftp
             ->save();
     }
 
-    public function getProperFileName($filepath)
-    {
-        $creationDate = $this->getFileCreationDate($filepath);
-        $newDate = str_replace(" ", "_", $creationDate);
-
-
-        $fileNewPath = str_replace("./", '', $filepath);
-        $fileNewPath = $fileNewPath . '_' . $newDate;
-        $filename = preg_replace('/[^\w\-\.]/', '_', $fileNewPath);
-        print_r($filename);
-        return $filename;
+   public function getProperFileName($filepath, $configId = '', $date = "")
+{
+    $unzipFilePath = strpos($filepath, Mage::getBaseDir('var')) !== false;
+    if($unzipFilePath){
+        return $filepath;
     }
+    if ($configId != '') {
+        $configurationId = $configId;
+    } else {
+        $configurationId = $this->_configData->getId();
+    }
+    if ($date != '') {
+        $creationDate = $date;
+    } else {
+        $creationDate = $this->getFileCreationDate($filepath);
+    }
+
+    $newDate = str_replace(" ", "_", $creationDate);
+    $fileNewPath = str_replace("./", '', $filepath);
+
+    $fileNewPath = $configurationId . '_' . $newDate . '_' . $fileNewPath;
+    $filename = preg_replace('/[^\w\-\.]/', '_', $fileNewPath);
+    return $filename;
+}
 
     protected function getFileCreationDate($filepath)
     {
@@ -257,10 +269,10 @@ public function saveAndDownloadFiles($file)
 
     if ($this->isDirectory($filepath)) {
         $fileNewPath = str_replace("./", '', $filepath);
-        $localFilePath = Mage::getBaseDir('var') . DS . 'filetransfer' . DS . $this->_configData->getId() . DS . $fileNewPath;
+        $localDirPath = Mage::getBaseDir('var') . DS . 'filetransfer' . DS . $this->_configData->getId() . DS . $fileNewPath;
         
-        if (!file_exists($localFilePath)) {
-            mkdir($localFilePath, 0777, true);
+        if (!file_exists($localDirPath)) {
+            mkdir($localDirPath, 0777, true);
         }
 
         $remoteFiles = $this->listDirectory($filepath);
@@ -268,8 +280,8 @@ public function saveAndDownloadFiles($file)
             $this->saveAndDownloadFiles($remoteFile);
         }
     } else {
-        $filename = $this->getProperFileName($filepath);
-        $localFilePath = Mage::getBaseDir('var') . DS . 'filetransfer' . DS . $this->_configData->getId() . DS . $filename;
+        $fileNewPath = str_replace("./", '', $filepath);
+        $localFilePath = Mage::getBaseDir('var') . DS . 'filetransfer' . DS . $this->_configData->getId() . DS . $fileNewPath;
 
         $directory = dirname($localFilePath);
         if (!is_dir($directory)) {
@@ -284,10 +296,11 @@ public function saveAndDownloadFiles($file)
             throw new Exception('Failed to save attachment: ' . $filepath);
         }
 
-        // $this->saveFileToDb($filepath);
-        // $this->moveFile($filepath, $localFilePath);
+        $this->saveFileToDb($filepath);
+        $this->moveFile($filepath, $localFilePath);
     }
 }
+
 
 
 
